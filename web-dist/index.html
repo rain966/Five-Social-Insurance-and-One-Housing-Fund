@@ -1,0 +1,1363 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>五险一金缴存计算器</title>
+  <style>
+    :root {
+      --bg: #f4f7fb;
+      --panel: #ffffff;
+      --ink: #152033;
+      --muted: #637083;
+      --line: #d9e1ec;
+      --blue: #2457d6;
+      --green: #147d64;
+      --amber: #a76005;
+      --red: #b83232;
+      --shadow: 0 16px 40px rgba(24, 39, 75, 0.09);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      color: var(--ink);
+      background:
+        linear-gradient(180deg, #e9f0fb 0, var(--bg) 320px);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei", Arial, sans-serif;
+      line-height: 1.5;
+    }
+
+    a {
+      color: var(--blue);
+      text-decoration: none;
+    }
+
+    a:hover {
+      text-decoration: underline;
+    }
+
+    .app {
+      width: min(1180px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: 28px 0 36px;
+    }
+
+    header {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 20px;
+      align-items: end;
+      margin-bottom: 20px;
+    }
+
+    h1 {
+      margin: 0 0 8px;
+      font-size: 30px;
+      font-weight: 760;
+      letter-spacing: 0;
+    }
+
+    .subhead {
+      margin: 0;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .version {
+      padding: 8px 12px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.74);
+      color: #3d4a5d;
+      font-size: 13px;
+      white-space: nowrap;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 340px 1fr;
+      gap: 18px;
+      align-items: start;
+    }
+
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      box-shadow: var(--shadow);
+    }
+
+    .controls {
+      padding: 18px;
+      position: sticky;
+      top: 16px;
+    }
+
+    .section-title {
+      margin: 0 0 12px;
+      font-size: 16px;
+      font-weight: 720;
+    }
+
+    .field {
+      display: grid;
+      gap: 7px;
+      margin-bottom: 14px;
+    }
+
+    label {
+      color: #2e3b4f;
+      font-size: 13px;
+      font-weight: 650;
+    }
+
+    input,
+    select {
+      width: 100%;
+      height: 42px;
+      padding: 8px 10px;
+      border: 1px solid #c8d2e0;
+      border-radius: 7px;
+      background: #fff;
+      color: var(--ink);
+      font: inherit;
+      outline: none;
+      transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    input:focus,
+    select:focus {
+      border-color: var(--blue);
+      box-shadow: 0 0 0 3px rgba(36, 87, 214, 0.13);
+    }
+
+    input[type="number"] {
+      text-align: right;
+    }
+
+    .hint {
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .button-row {
+      display: flex;
+      gap: 10px;
+      margin-top: 16px;
+    }
+
+    button {
+      height: 40px;
+      border: 1px solid transparent;
+      border-radius: 7px;
+      padding: 0 14px;
+      font: inherit;
+      font-weight: 680;
+      cursor: pointer;
+    }
+
+    .primary {
+      flex: 1;
+      background: var(--blue);
+      color: #fff;
+    }
+
+    .secondary {
+      background: #fff;
+      border-color: #c8d2e0;
+      color: #2e3b4f;
+    }
+
+    .summary {
+      display: grid;
+      grid-template-columns: repeat(6, minmax(0, 1fr));
+      gap: 12px;
+      margin-bottom: 18px;
+    }
+
+    .metric {
+      min-height: 104px;
+      padding: 15px;
+    }
+
+    .metric .label {
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .metric .value {
+      margin-top: 8px;
+      font-size: 24px;
+      font-weight: 760;
+      overflow-wrap: anywhere;
+    }
+
+    .metric .note {
+      margin-top: 5px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .main-card {
+      overflow: hidden;
+    }
+
+    .card-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: center;
+      padding: 16px 18px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .card-head h2 {
+      margin: 0;
+      font-size: 17px;
+    }
+
+    .status {
+      color: var(--green);
+      font-size: 13px;
+      text-align: right;
+    }
+
+    .status.warn {
+      color: var(--amber);
+    }
+
+    .status.error {
+      color: var(--red);
+    }
+
+    .table-wrap {
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    table {
+      width: 100%;
+      min-width: 760px;
+      border-collapse: collapse;
+    }
+
+    th,
+    td {
+      padding: 11px 12px;
+      border-bottom: 1px solid #e7edf5;
+      text-align: right;
+      vertical-align: middle;
+      font-size: 14px;
+    }
+
+    th {
+      background: #f8fafd;
+      color: #536174;
+      font-size: 12px;
+      font-weight: 720;
+    }
+
+    th:first-child,
+    td:first-child {
+      text-align: left;
+      min-width: 170px;
+    }
+
+    .item-name {
+      font-weight: 700;
+    }
+
+    .item-desc {
+      margin-top: 2px;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 400;
+    }
+
+    .amount-input {
+      height: 34px;
+      min-width: 116px;
+      padding: 6px 8px;
+      font-size: 14px;
+    }
+
+    .amount-input[disabled] {
+      background: #f1f4f8;
+      color: #8a96a6;
+      cursor: not-allowed;
+    }
+
+    tfoot td {
+      background: #fbfcfe;
+      font-weight: 760;
+    }
+
+    .notes {
+      margin-top: 18px;
+      padding: 16px 18px;
+      color: #3d4a5d;
+      font-size: 13px;
+    }
+
+    .notes p {
+      margin: 0 0 8px;
+    }
+
+    .notes p:last-child {
+      margin-bottom: 0;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      height: 24px;
+      padding: 0 8px;
+      border-radius: 999px;
+      background: #eef3ff;
+      color: #264fb5;
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .mobile-label {
+      display: none;
+    }
+
+    .desktop-empty {
+      display: table-cell;
+    }
+
+    @media (max-width: 980px) {
+      .layout,
+      header {
+        grid-template-columns: 1fr;
+      }
+
+      .controls {
+        position: static;
+      }
+
+      .summary {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .version {
+        width: fit-content;
+      }
+    }
+
+    @media (max-width: 640px) {
+      body {
+        background: #f4f7fb;
+      }
+
+      .app {
+        width: 100%;
+        padding: 14px 10px 28px;
+      }
+
+      header {
+        gap: 10px;
+        margin-bottom: 12px;
+      }
+
+      h1 {
+        margin-bottom: 6px;
+        font-size: 22px;
+        line-height: 1.25;
+      }
+
+      .subhead {
+        font-size: 13px;
+      }
+
+      .version {
+        width: 100%;
+        white-space: normal;
+      }
+
+      .panel {
+        border-radius: 8px;
+        box-shadow: 0 8px 22px rgba(24, 39, 75, 0.07);
+      }
+
+      .controls,
+      .notes {
+        padding: 14px;
+      }
+
+      input,
+      select,
+      button {
+        min-height: 44px;
+      }
+
+      .summary {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 8px;
+        margin-bottom: 12px;
+      }
+
+      .metric {
+        min-height: 92px;
+        padding: 12px;
+      }
+
+      .metric .value {
+        font-size: 19px;
+      }
+
+      .metric .note {
+        font-size: 11px;
+      }
+
+      .grid-2 {
+        grid-template-columns: 1fr;
+        gap: 0;
+      }
+
+      .card-head {
+        align-items: flex-start;
+        flex-direction: column;
+        padding: 14px;
+      }
+
+      .status {
+        width: 100%;
+        text-align: left;
+      }
+
+      .table-wrap {
+        overflow: visible;
+      }
+
+      table,
+      thead,
+      tbody,
+      tfoot,
+      tr,
+      th,
+      td {
+        display: block;
+      }
+
+      table {
+        min-width: 0;
+      }
+
+      thead {
+        display: none;
+      }
+
+      tbody {
+        padding: 10px;
+        background: #f8fafd;
+      }
+
+      tbody tr {
+        margin-bottom: 10px;
+        border: 1px solid #dce4ef;
+        border-radius: 8px;
+        background: #fff;
+        overflow: hidden;
+      }
+
+      tbody tr:last-child {
+        margin-bottom: 0;
+      }
+
+      tbody td {
+        display: grid;
+        grid-template-columns: 92px minmax(0, 1fr);
+        gap: 10px;
+        align-items: center;
+        min-height: 48px;
+        padding: 10px 12px;
+        border-bottom: 1px solid #edf1f6;
+        text-align: right;
+      }
+
+      tbody td:first-child {
+        display: block;
+        min-width: 0;
+        padding: 12px;
+        text-align: left;
+        background: #fbfcfe;
+      }
+
+      tbody td:last-child {
+        border-bottom: 0;
+      }
+
+      tbody td::before {
+        content: attr(data-label);
+        color: var(--muted);
+        font-size: 12px;
+        font-weight: 700;
+        text-align: left;
+      }
+
+      tbody td:first-child::before {
+        display: none;
+      }
+
+      .amount-input {
+        width: 100%;
+        min-width: 0;
+        height: 40px;
+        font-size: 16px;
+      }
+
+      tfoot {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        border-top: 1px solid var(--line);
+        background: #fbfcfe;
+      }
+
+      tfoot tr {
+        display: contents;
+      }
+
+      tfoot td {
+        border-bottom: 0;
+        padding: 11px 12px;
+        text-align: left;
+      }
+
+      tfoot td:first-child,
+      .desktop-empty {
+        display: none;
+      }
+
+      tfoot td::before {
+        display: block;
+        margin-bottom: 4px;
+        color: var(--muted);
+        font-size: 12px;
+        font-weight: 700;
+      }
+
+      #employeeTotalCell::before {
+        content: "个人合计";
+      }
+
+      #employerTotalCell::before {
+        content: "单位合计";
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <header>
+      <div>
+        <h1 id="appTitle">北京市五险一金缴存计算器</h1>
+        <p class="subhead">输入缴存基数自动计算个人和单位月缴金额；也可以直接编辑表格中的任一可计算金额来反推缴存基数。</p>
+      </div>
+      <div class="version" id="versionNote">默认口径：2025 年度已公布上下限</div>
+    </header>
+
+    <section class="layout">
+      <aside class="panel controls" aria-label="计算参数">
+        <h2 class="section-title">计算参数</h2>
+
+        <div class="field">
+          <label for="citySelect">参保城市</label>
+          <select id="citySelect">
+            <option value="beijing">北京市</option>
+            <option value="harbin">哈尔滨市</option>
+            <option value="shenyang">沈阳市</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="baseInput">申报月工资 / 缴存基数</label>
+          <input id="baseInput" type="number" min="0" step="0.01" value="10000" inputmode="decimal">
+          <div class="hint">输入工资低于下限或高于上限时，按下方上下限封顶保底。</div>
+        </div>
+
+        <div class="grid-2">
+          <div class="field">
+            <label for="socialMin">社保基数下限</label>
+            <input id="socialMin" type="number" min="0" step="0.01" value="7162" inputmode="decimal">
+          </div>
+
+          <div class="field">
+            <label for="socialMax">社保基数上限</label>
+            <input id="socialMax" type="number" min="0" step="0.01" value="35811" inputmode="decimal">
+          </div>
+        </div>
+
+        <div class="grid-2">
+          <div class="field">
+            <label for="fundMin">公积金基数下限</label>
+            <input id="fundMin" type="number" min="0" step="0.01" value="2540" inputmode="decimal">
+          </div>
+
+          <div class="field">
+            <label for="fundMax">公积金基数上限</label>
+            <input id="fundMax" type="number" min="0" step="0.01" value="35811" inputmode="decimal">
+          </div>
+        </div>
+
+        <div class="grid-2">
+          <div class="field">
+            <label for="fundRate">公积金比例</label>
+            <select id="fundRate"></select>
+          </div>
+
+          <div class="field">
+            <label for="injuryRate">工伤单位比例</label>
+            <select id="injuryRate">
+              <option value="0.002">0.2%</option>
+              <option value="0.004">0.4%</option>
+              <option value="0.007">0.7%</option>
+              <option value="0.009">0.9%</option>
+              <option value="0.011">1.1%</option>
+              <option value="0.013">1.3%</option>
+              <option value="0.016">1.6%</option>
+              <option value="0.019">1.9%</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="roundingMode">金额精度</label>
+          <select id="roundingMode">
+            <option value="cent">保留到分</option>
+            <option value="yuan">四舍五入到元</option>
+          </select>
+        </div>
+
+        <div class="grid-2">
+          <div class="field">
+            <label for="specialDeduction">专项附加扣除 / 月</label>
+            <input id="specialDeduction" type="number" min="0" step="0.01" value="0" inputmode="decimal">
+          </div>
+
+          <div class="field">
+            <label for="taxMonth">计税月份</label>
+            <select id="taxMonth">
+              <option value="1">1 月</option>
+              <option value="2">2 月</option>
+              <option value="3">3 月</option>
+              <option value="4">4 月</option>
+              <option value="5">5 月</option>
+              <option value="6">6 月</option>
+              <option value="7">7 月</option>
+              <option value="8">8 月</option>
+              <option value="9">9 月</option>
+              <option value="10">10 月</option>
+              <option value="11">11 月</option>
+              <option value="12">12 月</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="button-row">
+          <button class="primary" id="calcButton" type="button">重新计算</button>
+          <button class="secondary" id="resetButton" type="button">重置</button>
+        </div>
+      </aside>
+
+      <section>
+        <div class="summary">
+          <div class="panel metric">
+            <div class="label">个人月缴合计</div>
+            <div class="value" id="employeeTotal">¥0.00</div>
+            <div class="note">从工资中个人承担部分</div>
+          </div>
+          <div class="panel metric">
+            <div class="label">预计到手工资</div>
+            <div class="value" id="netSalary">¥0.00</div>
+            <div class="note">扣除个人缴费和本月预扣个税</div>
+          </div>
+          <div class="panel metric">
+            <div class="label">本月预扣个税</div>
+            <div class="value" id="incomeTax">¥0.00</div>
+            <div class="note">按累计预扣法估算</div>
+          </div>
+          <div class="panel metric">
+            <div class="label">单位月缴合计</div>
+            <div class="value" id="employerTotal">¥0.00</div>
+            <div class="note">单位额外承担部分</div>
+          </div>
+          <div class="panel metric">
+            <div class="label">社保主基数</div>
+            <div class="value" id="socialBase">0.00</div>
+            <div class="note">养老、医疗、失业、工伤</div>
+          </div>
+          <div class="panel metric">
+            <div class="label">公积金实际基数</div>
+            <div class="value" id="fundBase">0.00</div>
+            <div class="note">按所选公积金比例计算</div>
+          </div>
+        </div>
+
+        <div class="panel main-card">
+          <div class="card-head">
+            <h2>每月缴存明细</h2>
+            <div id="status" class="status">已按当前基数计算</div>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>项目</th>
+                  <th>个人比例 / 规则</th>
+                  <th>单位比例 / 规则</th>
+                  <th>个人缴存金额</th>
+                  <th>单位缴存金额</th>
+                </tr>
+              </thead>
+              <tbody id="detailBody"></tbody>
+              <tfoot>
+                <tr>
+                  <td>合计</td>
+                  <td class="desktop-empty" colspan="2"></td>
+                  <td id="employeeTotalCell">¥0.00</td>
+                  <td id="employerTotalCell">¥0.00</td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+        </div>
+
+        <div class="panel notes">
+          <p><span class="badge">说明</span> <span id="cityNote">生育保险已并入北京市城镇职工基本医疗保险，本页将“医疗保险（含生育）”按单位 9.8%、个人 2% + 3 元计算，生育保险单列为 0 元提示项。</span></p>
+          <p>到手工资按“申报月工资 - 个人五险一金 - 本月预扣个税”估算；个税按居民个人工资薪金累计预扣法、每月基本减除费用 5000 元、工资和扣除每月不变计算，不含年终奖、劳务报酬、其他专项扣除或已预缴差异。</p>
+          <p>反推基数时，若编辑的金额低于下限或高于上限对应金额，页面会给出提示；封顶金额只能反推出上限基数，不能区分实际工资是否更高。</p>
+          <p>数据来源：<span id="dataSources"></span></p>
+        </div>
+      </section>
+    </section>
+  </main>
+
+  <script>
+    const CITY_CONFIGS = {
+      beijing: {
+        title: "北京市五险一金缴存计算器",
+        version: "默认口径：2025 年度已公布上下限",
+        limits: {
+          socialMin: 7162,
+          socialMax: 35811,
+          fundMin: 2540,
+          fundMax: 35811
+        },
+        defaultFundRate: 0.12,
+        defaultInjuryRate: 0.002,
+        note: "生育保险已并入北京市城镇职工基本医疗保险，本页将“医疗保险（含生育）”按单位 9.8%、个人 2% + 3 元计算，生育保险单列为 0 元提示项。",
+        sources: [
+          ["2025 年北京市社保基数上下限通告", "https://rsj.beijing.gov.cn/xxgk/2024zcwj/202509/t20250918_4204880.html"],
+          ["北京住房公积金管理中心", "https://gjj.beijing.gov.cn/web/zwgk61/2024zcwj/436433461/743765441/index.html"],
+          ["2026 公积金年度申报问答", "https://gjj.beijing.gov.cn/web/zwfw5/1747335/1747336/744064407/index.html"],
+          ["北京市医疗保障局", "https://ybj.beijing.gov.cn/zwgk/2024zcwj/202406/t20240617_3716990.html"],
+          ["北京市海淀区人民政府医保缴费口径", "https://zyk.bjhd.gov.cn/zwdt/tdzt/2018/csrlsb/cjwtcs/shbxdj/202510/t20251022_4790568.shtml"]
+        ],
+        items: [
+          {
+            id: "pension",
+            name: "养老保险",
+            desc: "职工基本养老保险",
+            baseType: "social",
+            employeeRate: 0.08,
+            employerRate: 0.16
+          },
+          {
+            id: "medical",
+            name: "医疗保险",
+            desc: "含生育保险；个人另加 3 元",
+            baseType: "social",
+            employeeRate: 0.02,
+            employeeFixed: 3,
+            employerRate: 0.098
+          },
+          {
+            id: "unemployment",
+            name: "失业保险",
+            desc: "单位和个人共同缴纳",
+            baseType: "social",
+            employeeRate: 0.005,
+            employerRate: 0.005
+          },
+          {
+            id: "injury",
+            name: "工伤保险",
+            desc: "按单位行业费率缴纳",
+            baseType: "social",
+            employeeRate: 0,
+            employerRateKey: "injuryRate"
+          },
+          {
+            id: "maternity",
+            name: "生育保险",
+            desc: "已并入医疗保险，不另列缴费",
+            baseType: "social",
+            employeeRate: 0,
+            employerRate: 0,
+            locked: true
+          },
+          {
+            id: "fund",
+            name: "住房公积金",
+            desc: "单位和个人通常同一比例",
+            baseType: "fund",
+            employeeRateKey: "fundRate",
+            employerRateKey: "fundRate"
+          }
+        ]
+      },
+      harbin: {
+        title: "哈尔滨市五险一金缴存计算器",
+        version: "默认口径：2026 年度已公布上下限",
+        limits: {
+          socialMin: 4623,
+          socialMax: 23115,
+          fundMin: 2270,
+          fundMax: 28430
+        },
+        defaultFundRate: 0.12,
+        defaultInjuryRate: 0.002,
+        note: "哈尔滨市职工基本医疗保险本页按单位 7.5%、个人 2% 计算；生育保险已并入职工医保，单位缴费按 0.5% 单列展示，个人不缴纳。",
+        sources: [
+          ["黑龙江省税务局 2026 年企业职工基本养老保险缴费基数提示", "https://heilongjiang.chinatax.gov.cn/art/2025/12/29/art_8173_574332.html"],
+          ["哈尔滨住房公积金管理中心 2026 年度缴存基数调整", "https://www.hrbgjj.org.cn/tzgg/2411.jhtml"],
+          ["哈尔滨市人民政府职工医保缴费口径", "https://www.harbin.gov.cn/haerbin/c104568/202304/c01_903281.shtml"]
+        ],
+        items: [
+          {
+            id: "pension",
+            name: "养老保险",
+            desc: "职工基本养老保险",
+            baseType: "social",
+            employeeRate: 0.08,
+            employerRate: 0.16
+          },
+          {
+            id: "medical",
+            name: "医疗保险",
+            desc: "职工基本医疗保险",
+            baseType: "social",
+            employeeRate: 0.02,
+            employerRate: 0.075
+          },
+          {
+            id: "unemployment",
+            name: "失业保险",
+            desc: "单位和个人共同缴纳",
+            baseType: "social",
+            employeeRate: 0.005,
+            employerRate: 0.005
+          },
+          {
+            id: "injury",
+            name: "工伤保险",
+            desc: "按单位行业费率缴纳",
+            baseType: "social",
+            employeeRate: 0,
+            employerRateKey: "injuryRate"
+          },
+          {
+            id: "maternity",
+            name: "生育保险",
+            desc: "并入职工医保，单位缴纳",
+            baseType: "social",
+            employeeRate: 0,
+            employerRate: 0.005
+          },
+          {
+            id: "fund",
+            name: "住房公积金",
+            desc: "单位和个人通常同一比例",
+            baseType: "fund",
+            employeeRateKey: "fundRate",
+            employerRateKey: "fundRate"
+          }
+        ]
+      },
+      shenyang: {
+        title: "沈阳市五险一金缴存计算器",
+        version: "默认口径：2026 年度已公布上下限",
+        limits: {
+          socialMin: 4359,
+          socialMax: 21792,
+          fundMin: 2230,
+          fundMax: 30657
+        },
+        defaultFundRate: 0.12,
+        defaultInjuryRate: 0.002,
+        note: "沈阳市职工医保和生育保险自 2025 年 12 月 1 日起按月缴费基数 8076 元计算；本页将医疗保险按单位 8.6%、个人 2%，生育保险按单位 0.6%、个人 0 计算。",
+        sources: [
+          ["辽宁省 2025 年养老保险缴费基数上下限通知", "https://rst.ln.gov.cn/rst/zxzx/gsgg/2025092012232024861/index.shtml"],
+          ["沈阳市医保局职工医保和生育保险缴费基数通知", "https://ybj.shenyang.gov.cn/zwgk/fdzdgknr/tzgg/202511/t20251125_4943248.html"],
+          ["沈阳住房公积金管理中心 2026 年度缴存基数上限通知", "https://sygjj.shenyang.gov.cn/zcfg/202607/t20260721_5060324.html"],
+          ["沈阳市最低工资标准通知", "https://rsj.shenyang.gov.cn/zwxx/fdzdgknr/bmwj/202511/t20251128_4945382.html"]
+        ],
+        items: [
+          {
+            id: "pension",
+            name: "养老保险",
+            desc: "职工基本养老保险",
+            baseType: "social",
+            employeeRate: 0.08,
+            employerRate: 0.16
+          },
+          {
+            id: "medical",
+            name: "医疗保险",
+            desc: "职工基本医疗保险；按医保固定基数",
+            baseType: "social",
+            fixedBase: 8076,
+            employeeRate: 0.02,
+            employerRate: 0.086
+          },
+          {
+            id: "unemployment",
+            name: "失业保险",
+            desc: "单位和个人共同缴纳",
+            baseType: "social",
+            employeeRate: 0.005,
+            employerRate: 0.005
+          },
+          {
+            id: "injury",
+            name: "工伤保险",
+            desc: "按单位行业费率缴纳",
+            baseType: "social",
+            employeeRate: 0,
+            employerRateKey: "injuryRate"
+          },
+          {
+            id: "maternity",
+            name: "生育保险",
+            desc: "按医保固定基数；个人不缴纳",
+            baseType: "social",
+            fixedBase: 8076,
+            employeeRate: 0,
+            employerRate: 0.006
+          },
+          {
+            id: "fund",
+            name: "住房公积金",
+            desc: "单位和个人通常同一比例",
+            baseType: "fund",
+            employeeRateKey: "fundRate",
+            employerRateKey: "fundRate"
+          }
+        ]
+      }
+    };
+
+    const els = {
+      appTitle: document.querySelector("#appTitle"),
+      versionNote: document.querySelector("#versionNote"),
+      citySelect: document.querySelector("#citySelect"),
+      baseInput: document.querySelector("#baseInput"),
+      socialMin: document.querySelector("#socialMin"),
+      socialMax: document.querySelector("#socialMax"),
+      fundMin: document.querySelector("#fundMin"),
+      fundMax: document.querySelector("#fundMax"),
+      fundRate: document.querySelector("#fundRate"),
+      injuryRate: document.querySelector("#injuryRate"),
+      roundingMode: document.querySelector("#roundingMode"),
+      specialDeduction: document.querySelector("#specialDeduction"),
+      taxMonth: document.querySelector("#taxMonth"),
+      calcButton: document.querySelector("#calcButton"),
+      resetButton: document.querySelector("#resetButton"),
+      detailBody: document.querySelector("#detailBody"),
+      employeeTotal: document.querySelector("#employeeTotal"),
+      netSalary: document.querySelector("#netSalary"),
+      incomeTax: document.querySelector("#incomeTax"),
+      employerTotal: document.querySelector("#employerTotal"),
+      employeeTotalCell: document.querySelector("#employeeTotalCell"),
+      employerTotalCell: document.querySelector("#employerTotalCell"),
+      socialBase: document.querySelector("#socialBase"),
+      fundBase: document.querySelector("#fundBase"),
+      cityNote: document.querySelector("#cityNote"),
+      dataSources: document.querySelector("#dataSources"),
+      status: document.querySelector("#status")
+    };
+
+    let activeCity = "beijing";
+    let activeAmountInput = null;
+    let lastMessage = "";
+    let lastMessageType = "ok";
+
+    const TAX_BRACKETS = [
+      { threshold: 960000, rate: 0.45, quickDeduction: 181920 },
+      { threshold: 660000, rate: 0.35, quickDeduction: 85920 },
+      { threshold: 420000, rate: 0.30, quickDeduction: 52920 },
+      { threshold: 300000, rate: 0.25, quickDeduction: 31920 },
+      { threshold: 144000, rate: 0.20, quickDeduction: 16920 },
+      { threshold: 36000, rate: 0.10, quickDeduction: 2520 },
+      { threshold: 0, rate: 0.03, quickDeduction: 0 }
+    ];
+
+    function currentConfig() {
+      return CITY_CONFIGS[activeCity] || CITY_CONFIGS.beijing;
+    }
+
+    function currentItems() {
+      return currentConfig().items;
+    }
+
+    function initFundOptions() {
+      for (let percent = 5; percent <= 12; percent += 1) {
+        const option = document.createElement("option");
+        option.value = String(percent / 100);
+        option.textContent = `${percent}%`;
+        if (percent === 12) option.selected = true;
+        els.fundRate.appendChild(option);
+      }
+    }
+
+    function clamp(value, min, max) {
+      return Math.min(Math.max(value, min), max);
+    }
+
+    function parseNumber(value) {
+      const number = Number(value);
+      return Number.isFinite(number) ? number : 0;
+    }
+
+    function precision() {
+      return els.roundingMode.value === "yuan" ? 0 : 2;
+    }
+
+    function roundAmount(value) {
+      const digits = precision();
+      const factor = 10 ** digits;
+      return Math.round((value + Number.EPSILON) * factor) / factor;
+    }
+
+    function money(value) {
+      return `¥${roundAmount(value).toLocaleString("zh-CN", {
+        minimumFractionDigits: precision(),
+        maximumFractionDigits: precision()
+      })}`;
+    }
+
+    function amountString(value) {
+      return roundAmount(value).toFixed(precision());
+    }
+
+    function baseString(value) {
+      return value.toLocaleString("zh-CN", {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+      });
+    }
+
+    function percentString(rate) {
+      if (!rate) return "0%";
+      return `${(rate * 100).toFixed(rate * 100 < 1 ? 1 : 2).replace(/\.?0+$/, "")}%`;
+    }
+
+    function ratesFor(item) {
+      const employeeRate = item.employeeRateKey ? parseNumber(els[item.employeeRateKey].value) : (item.employeeRate || 0);
+      const employerRate = item.employerRateKey ? parseNumber(els[item.employerRateKey].value) : (item.employerRate || 0);
+      return { employeeRate, employerRate };
+    }
+
+    function basesFromInput() {
+      const declaredBase = parseNumber(els.baseInput.value);
+      const limits = currentLimits();
+      return {
+        declaredBase,
+        social: clamp(declaredBase, limits.socialMin, limits.socialMax),
+        fund: clamp(declaredBase, limits.fundMin, limits.fundMax)
+      };
+    }
+
+    function normalizedLimit(minValue, maxValue, fallbackMin, fallbackMax) {
+      const min = parseNumber(minValue) || fallbackMin;
+      const max = parseNumber(maxValue) || fallbackMax;
+      return min <= max ? { min, max } : { min: max, max: min };
+    }
+
+    function currentLimits() {
+      const social = normalizedLimit(
+        els.socialMin.value,
+        els.socialMax.value,
+        currentConfig().limits.socialMin,
+        currentConfig().limits.socialMax
+      );
+      const fund = normalizedLimit(
+        els.fundMin.value,
+        els.fundMax.value,
+        currentConfig().limits.fundMin,
+        currentConfig().limits.fundMax
+      );
+      return {
+        socialMin: social.min,
+        socialMax: social.max,
+        fundMin: fund.min,
+        fundMax: fund.max
+      };
+    }
+
+    function baseForItem(item, bases) {
+      return typeof item.fixedBase === "number" ? item.fixedBase : bases[item.baseType];
+    }
+
+    function contribution(item, side, base) {
+      const { employeeRate, employerRate } = ratesFor(item);
+      const rate = side === "employee" ? employeeRate : employerRate;
+      const fixed = side === "employee" ? (item.employeeFixed || 0) : (item.employerFixed || 0);
+      return roundAmount(base * rate + fixed);
+    }
+
+    function cumulativeTax(taxableIncome) {
+      const income = Math.max(0, taxableIncome);
+      const bracket = TAX_BRACKETS.find((candidate) => income > candidate.threshold) || TAX_BRACKETS[TAX_BRACKETS.length - 1];
+      return roundAmount(Math.max(0, income * bracket.rate - bracket.quickDeduction));
+    }
+
+    function monthlyIncomeTax(declaredBase, employeeTotal) {
+      const month = clamp(Math.round(parseNumber(els.taxMonth.value)) || 1, 1, 12);
+      const specialDeduction = Math.max(0, parseNumber(els.specialDeduction.value));
+      const monthlyTaxable = declaredBase - employeeTotal - specialDeduction - 5000;
+      const currentTax = cumulativeTax(monthlyTaxable * month);
+      const previousTax = cumulativeTax(monthlyTaxable * (month - 1));
+      return roundAmount(currentTax - previousTax);
+    }
+
+    function ruleText(item, side) {
+      const { employeeRate, employerRate } = ratesFor(item);
+      const rate = side === "employee" ? employeeRate : employerRate;
+      const fixed = side === "employee" ? (item.employeeFixed || 0) : (item.employerFixed || 0);
+      if (!rate && !fixed) return "0";
+      return fixed ? `${percentString(rate)} + ${fixed} 元` : percentString(rate);
+    }
+
+    function renderRows() {
+      els.detailBody.innerHTML = "";
+
+      currentItems().forEach((item) => {
+        const tr = document.createElement("tr");
+        const canEmployeeReverse = !item.locked && !item.fixedBase && ratesFor(item).employeeRate > 0;
+        const canEmployerReverse = !item.locked && !item.fixedBase && ratesFor(item).employerRate > 0;
+
+        tr.innerHTML = `
+          <td data-label="项目">
+            <div class="item-name">${item.name}</div>
+            <div class="item-desc">${item.desc}</div>
+          </td>
+          <td data-label="个人规则">${ruleText(item, "employee")}</td>
+          <td data-label="单位规则">${ruleText(item, "employer")}</td>
+          <td data-label="个人金额"><input class="amount-input" type="number" step="0.01" inputmode="decimal" data-id="${item.id}" data-side="employee" ${canEmployeeReverse ? "" : "disabled"}></td>
+          <td data-label="单位金额"><input class="amount-input" type="number" step="0.01" inputmode="decimal" data-id="${item.id}" data-side="employer" ${canEmployerReverse ? "" : "disabled"}></td>
+        `;
+        els.detailBody.appendChild(tr);
+      });
+    }
+
+    function setStatus(message, type = "ok") {
+      lastMessage = message;
+      lastMessageType = type;
+      els.status.textContent = message;
+      els.status.className = `status ${type === "ok" ? "" : type}`;
+    }
+
+    function fixedBaseMessages(declaredBase) {
+      const seen = new Map();
+      currentItems().forEach((item) => {
+        if (typeof item.fixedBase === "number" && declaredBase !== item.fixedBase) {
+          const key = item.fixedBase;
+          const names = seen.get(key) || [];
+          names.push(item.name);
+          seen.set(key, names);
+        }
+      });
+      return Array.from(seen.entries()).map(([base, names]) => `${names.join("、")}按 ${baseString(base)} 元计算`);
+    }
+
+    function statusForBases(declaredBase, socialBase, fundBase) {
+      if (declaredBase <= 0) {
+        return { message: "请输入大于 0 的基数或金额", type: "error" };
+      }
+      const parts = [];
+      if (declaredBase !== socialBase) {
+        parts.push(`社保按 ${baseString(socialBase)} 元计算`);
+      }
+      if (declaredBase !== fundBase) {
+        parts.push(`公积金按 ${baseString(fundBase)} 元计算`);
+      }
+      parts.push(...fixedBaseMessages(declaredBase));
+      if (parts.length) {
+        return { message: parts.join("；"), type: "warn" };
+      }
+      return { message: "已按当前基数计算", type: "ok" };
+    }
+
+    function recalculate(keepMessage = false) {
+      const bases = basesFromInput();
+      let employeeTotal = 0;
+      let employerTotal = 0;
+
+      currentItems().forEach((item) => {
+        const base = baseForItem(item, bases);
+        const employeeAmount = contribution(item, "employee", base);
+        const employerAmount = contribution(item, "employer", base);
+        employeeTotal += employeeAmount;
+        employerTotal += employerAmount;
+
+        const employeeInput = document.querySelector(`.amount-input[data-id="${item.id}"][data-side="employee"]`);
+        const employerInput = document.querySelector(`.amount-input[data-id="${item.id}"][data-side="employer"]`);
+        if (employeeInput && employeeInput !== activeAmountInput) employeeInput.value = amountString(employeeAmount);
+        if (employerInput && employerInput !== activeAmountInput) employerInput.value = amountString(employerAmount);
+      });
+
+      const incomeTax = monthlyIncomeTax(bases.declaredBase, employeeTotal);
+
+      els.employeeTotal.textContent = money(employeeTotal);
+      els.netSalary.textContent = money(bases.declaredBase - employeeTotal - incomeTax);
+      els.incomeTax.textContent = money(incomeTax);
+      els.employerTotal.textContent = money(employerTotal);
+      els.employeeTotalCell.textContent = money(employeeTotal);
+      els.employerTotalCell.textContent = money(employerTotal);
+      els.socialBase.textContent = baseString(bases.social);
+      els.fundBase.textContent = baseString(bases.fund);
+
+      if (keepMessage && lastMessage) {
+        setStatus(lastMessage, lastMessageType);
+      } else {
+        const status = statusForBases(bases.declaredBase, bases.social, bases.fund);
+        setStatus(status.message, status.type);
+      }
+    }
+
+    function inferBaseFromAmount(input) {
+      activeAmountInput = input;
+      const item = currentItems().find((candidate) => candidate.id === input.dataset.id);
+      const side = input.dataset.side;
+      const amount = parseNumber(input.value);
+      const { employeeRate, employerRate } = ratesFor(item);
+      const rate = side === "employee" ? employeeRate : employerRate;
+      const fixed = side === "employee" ? (item.employeeFixed || 0) : (item.employerFixed || 0);
+
+      if (!item || !rate) {
+        setStatus("该项金额不能反推基数", "error");
+        activeAmountInput = null;
+        return;
+      }
+
+      const inferredBase = (amount - fixed) / rate;
+      if (!Number.isFinite(inferredBase) || inferredBase <= 0) {
+        setStatus("金额过低，无法反推出有效基数", "error");
+        activeAmountInput = null;
+        return;
+      }
+
+      els.baseInput.value = inferredBase.toFixed(2);
+      const current = currentLimits();
+      const limitRange = item.baseType === "fund"
+        ? { min: current.fundMin, max: current.fundMax, name: "公积金" }
+        : { min: current.socialMin, max: current.socialMax, name: "社保" };
+      const minAmount = limitRange.min * rate + fixed;
+      const maxAmount = limitRange.max * rate + fixed;
+
+      let message = `已由${item.name}${side === "employee" ? "个人" : "单位"}金额反推基数 ${baseString(inferredBase)} 元`;
+      let type = "ok";
+      if (amount < minAmount) {
+        message += `；低于${limitRange.name}下限对应金额`;
+        type = "warn";
+      } else if (amount > maxAmount) {
+        message += `；高于${limitRange.name}上限对应金额`;
+        type = "warn";
+      } else if (Math.abs(amount - maxAmount) < 0.01) {
+        message += "；封顶金额只能定位到上限基数";
+        type = "warn";
+      }
+
+      setStatus(message, type);
+      recalculate(true);
+      activeAmountInput = null;
+    }
+
+    function renderSources() {
+      els.dataSources.innerHTML = "";
+      currentConfig().sources.forEach(([label, href], index) => {
+        if (index > 0) els.dataSources.append("、");
+        const link = document.createElement("a");
+        link.href = href;
+        link.target = "_blank";
+        link.rel = "noopener";
+        link.textContent = label;
+        els.dataSources.appendChild(link);
+      });
+      els.dataSources.append("。");
+    }
+
+    function applyCityDefaults(keepBase = true) {
+      const config = currentConfig();
+      els.appTitle.textContent = config.title;
+      els.versionNote.textContent = config.version;
+      els.socialMin.value = String(config.limits.socialMin);
+      els.socialMax.value = String(config.limits.socialMax);
+      els.fundMin.value = String(config.limits.fundMin);
+      els.fundMax.value = String(config.limits.fundMax);
+      els.fundRate.value = String(config.defaultFundRate);
+      els.injuryRate.value = String(config.defaultInjuryRate);
+      els.cityNote.textContent = config.note;
+      if (!keepBase) els.baseInput.value = "10000";
+      renderSources();
+      renderRows();
+      bindAmountInputs();
+      recalculate(false);
+    }
+
+    function bindEvents() {
+      els.citySelect.addEventListener("change", () => {
+        activeCity = els.citySelect.value;
+        applyCityDefaults(true);
+      });
+      els.baseInput.addEventListener("input", () => recalculate(false));
+      [els.socialMin, els.socialMax, els.fundMin, els.fundMax].forEach((input) => {
+        input.addEventListener("input", () => recalculate(false));
+      });
+      els.fundRate.addEventListener("change", () => {
+        renderRows();
+        bindAmountInputs();
+        recalculate(false);
+      });
+      els.injuryRate.addEventListener("change", () => {
+        renderRows();
+        bindAmountInputs();
+        recalculate(false);
+      });
+      els.roundingMode.addEventListener("change", () => recalculate(false));
+      els.specialDeduction.addEventListener("input", () => recalculate(false));
+      els.taxMonth.addEventListener("change", () => recalculate(false));
+      els.calcButton.addEventListener("click", () => recalculate(false));
+      els.resetButton.addEventListener("click", () => {
+        els.roundingMode.value = "cent";
+        els.specialDeduction.value = "0";
+        els.taxMonth.value = "1";
+        applyCityDefaults(false);
+      });
+    }
+
+    function bindAmountInputs() {
+      document.querySelectorAll(".amount-input").forEach((input) => {
+        input.addEventListener("input", () => inferBaseFromAmount(input));
+      });
+    }
+
+    initFundOptions();
+    applyCityDefaults(true);
+    bindEvents();
+  </script>
+</body>
+</html>
